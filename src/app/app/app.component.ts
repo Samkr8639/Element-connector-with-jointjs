@@ -23,8 +23,9 @@ export class AppComponent {
   private existingLinks: Set<string> = new Set();
   private deleteTimeout: any;
   private isShapeDelete: any;
+  private isStartConnection: boolean = false;
 
-  constructor(private toastr: ToastrService) {}
+  constructor(private toastr: ToastrService) { }
 
   async ngOnInit() {
     this.circ1 = new dia.Element({
@@ -41,6 +42,10 @@ export class AppComponent {
 
     await this.initializeGraph();
     await this.setupShapes();
+  }
+
+  addConnection() {
+    this.isStartConnection = !this.isStartConnection;
   }
 
   async initializeGraph() {
@@ -132,9 +137,11 @@ export class AppComponent {
       }
     });
 
+
     this.paper.on('link:mouseenter', (linkView) => {
       this.addLinkTools(linkView);
     });
+
 
     this.paper.on('link:mouseleave', (linkView) => {
       this.removeLinkTools(linkView);
@@ -185,19 +192,26 @@ export class AppComponent {
       }
     }
 
+
+    this.selectedDeleteShapes(clickedCell);
+
     // Handle source and target logic
-    if (!this.isSourceSet) {
-      // Set the source shape
-      this.setSource(clickedCell);
-    } else {
-      // Check for duplicate relation before setting the target
-      if (this.isDuplicateRelation(this.sourceShape!, clickedCell)) {
-        this.resetSelection();
-        return;
+    if (this.isStartConnection) {
+      if (!this.isSourceSet) {
+        // Set the source shape
+        this.setSource(clickedCell);
+      } else {
+        // Check for duplicate relation before setting the target
+        if (this.isDuplicateRelation(this.sourceShape!, clickedCell)) {
+          this.resetSelection();
+          return;
+        }
+
+        // Set the target and create the link
+        this.setTargetAndCreateLink(clickedCell);
       }
 
-      // Set the target and create the link
-      this.setTargetAndCreateLink(clickedCell);
+
     }
   }
 
@@ -252,15 +266,15 @@ export class AppComponent {
     return false;
   }
 
-  setSource(element: dia.Element) {
-    this.showDeleteOptionOnDblClick(element);
-    this.sourceShape = element;
+  setSource(source: dia.Element) {
+  
+    this.sourceShape = source;
     this.isSourceSet = true;
     console.log('Source set:', this.sourceShape);
   }
 
   setTargetAndCreateLink(target: dia.Element) {
-    this.showDeleteOptionOnDblClick(target);
+    // this.selectedDeleteShapes(target);
     this.targetShape = target;
     console.log('Target set:', this.targetShape);
     this.createLink(this.sourceShape!, this.targetShape!);
@@ -282,7 +296,6 @@ export class AppComponent {
       });
       link.vertices([
         { x: 130, y: 180 },
-        // { x: 400, y: 180 },
       ]);
       link.addTo(this.graph);
 
@@ -352,44 +365,13 @@ export class AppComponent {
     });
   }
 
-  // Show delete option on shape click
-  showDeleteOptionOnDblClick(clickedCell: dia.Element) {
+  selectedDeleteShapes(clickedCell: dia.Element) {
     // Ensure the clicked cell is an element
     if (clickedCell instanceof dia.Element) {
       this.isShapeDelete = clickedCell;
-      // Show delete option on double-click
-      // this.showDeleteOption(clickedCell);
     }
   }
 
-  // showDeleteOption(clickedCell: dia.Element) {
-  //   // Create a delete button
-  //   const deleteButton = document.createElement('button');
-  //   deleteButton.innerText = 'Delete';
-  //   deleteButton.style.position = 'absolute';
-  //   deleteButton.style.top = `${clickedCell.position().y + 20}px`;
-  //   deleteButton.style.left = `${clickedCell.position().x + 20}px`;
-  //   deleteButton.dataset['shapeId'] = clickedCell.id.toString(); // Use bracket notation to access data attributes
-
-  //   // Delete shape when button is clicked
-  //   deleteButton.onclick = () => {
-  //     this.deleteShape(clickedCell);
-  //     clearTimeout(this.deleteTimeout); // Clear the timeout if clicked
-  //   };
-
-  //   // Add the delete button to the body
-  //   document.body.appendChild(deleteButton);
-
-  //   // Hide the delete button after 3 seconds if not clicked
-  //   this.deleteTimeout = setTimeout(() => {
-  //     const deleteButton = document.querySelector(
-  //       `[data-shape-id="${clickedCell.id.toString()}"]`
-  //     );
-  //     if (deleteButton) {
-  //       deleteButton.remove();
-  //     }
-  //   }, 3000); // 3000ms = 3 seconds
-  // }
 
   // Delete the shape and hide the button
   deleteShape(shape: dia.Element) {
