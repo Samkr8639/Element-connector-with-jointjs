@@ -1,0 +1,14 @@
+body {
+  margin: unset;
+}
+
+#paper {
+  margin: 50px auto 0 auto;
+}
+
+.paper-cont {
+  width: 500px;
+  height: 700px;
+  border: 1px solid #ccc;
+  overflow: hidden;
+}
