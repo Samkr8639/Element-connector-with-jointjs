@@ -12,3 +12,7 @@ body {
   border: 1px solid #ccc;
   overflow: hidden;
 }
+
+.green-border {
+  border: 2px solid green;
+}

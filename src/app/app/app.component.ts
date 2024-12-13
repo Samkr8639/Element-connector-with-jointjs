@@ -23,7 +23,10 @@ export class AppComponent {
   private existingLinks: Set<string> = new Set();
   private deleteTimeout: any;
   private isShapeDelete: any;
-  private isStartConnection: boolean = false;
+  public isStartConnection: boolean = false;
+  private paperSize = { x: 0, y: 0, width: 500, height: 700 };
+  public isDelete:boolean = false;
+
 
   constructor(private toastr: ToastrService) { }
 
@@ -44,17 +47,13 @@ export class AppComponent {
     await this.setupShapes();
   }
 
-  addConnection() {
-    this.isStartConnection = !this.isStartConnection;
-  }
-
   async initializeGraph() {
     this.paper = new dia.Paper({
       el: document.getElementById('paper') as HTMLElement,
       model: this.graph,
       width: 500,
       height: 700,
-      background: { color: '#b3b3b3' },
+      background: { color: '#3672e7' },
       cellViewNamespace: this.namespace,
     });
   }
@@ -63,18 +62,28 @@ export class AppComponent {
     this.circ1 = this.createCircle(20, 25, 150, 150, 'Hello');
     this.rect2 = this.createRectangle(95, 225, 180, 50, 'World!');
 
-    const paperSize = { x: 0, y: 0, width: 500, height: 700 };
-    this.applyDragConstraints(this.circ1, paperSize);
-    this.applyDragConstraints(this.rect2, paperSize);
+    
+    this.applyDragConstraints(this.circ1, this.paperSize);
+    this.applyDragConstraints(this.rect2, this.paperSize);
 
     this.setupLinkEvents();
   }
 
+  addConnection() {
+    this.isStartConnection = !this.isStartConnection;
+    if(this.isStartConnection){
+      this.toastr.show('Start connection is enable');
+    }
+  }
+
+
   addShape() {
-    // You can alternate between adding circles and rectangles or add both dynamically
-    const shapeType = Math.random() > 0.5 ? 'circle' : 'rectangle'; // Randomly decide between circle or rectangle
+    // Randomly decide between adding a circle or a rectangle
+    const shapeType = Math.random() > 0.5 ? 'circle' : 'rectangle';
+    let randomShape: any;
+  
     if (shapeType === 'circle') {
-      this.createCircle(
+      randomShape = this.createCircle(
         Math.random() * 400,
         Math.random() * 600,
         150,
@@ -82,7 +91,7 @@ export class AppComponent {
         'New Circle'
       );
     } else {
-      this.createRectangle(
+      randomShape = this.createRectangle(
         Math.random() * 400,
         Math.random() * 600,
         180,
@@ -90,7 +99,11 @@ export class AppComponent {
         'New Rectangle'
       );
     }
+  
+    // Ensure drag constraints are applied to the created shape
+    this.applyDragConstraints(randomShape, this.paperSize);
   }
+  
 
   createCircle(
     x: number,
@@ -128,6 +141,11 @@ export class AppComponent {
     // Event listener for when clicking anywhere on the paper
     this.paper.on('blank:pointerdown', () => {
       this.isShapeDelete = null;
+      this.isStartConnection = false;
+      this.isDelete = false;
+      if(!this.isStartConnection){
+        this.toastr.show('Start connection is desabled');
+      }
       this.resetPreviousSelection();
     });
 
@@ -180,7 +198,10 @@ export class AppComponent {
 
       // Check if the element is a rectangle or ellipse based on its rx property
       const rx = element.attr('body').rx;
-      const strokeColor = 'green';
+      let strokeColor = 'green';
+      if(strokeColor = 'green'){
+        this.isDelete = true;
+      }
       const strokeWidth = 3;
 
       if (rx === 0 || rx > 0) {
@@ -216,8 +237,10 @@ export class AppComponent {
   }
 
   resetPreviousSelection() {
-    // Reset previously selected shapes
+    // reset the value of isStartConnection
+    // this.isStartConnection = false;
 
+    // Reset previously selected shapes
     this.graph.getElements().forEach((element: joint.dia.Element) => {
       const attrs = element.attributes?.attrs;
       const body = attrs?.['body'];
@@ -267,7 +290,6 @@ export class AppComponent {
   }
 
   setSource(source: dia.Element) {
-  
     this.sourceShape = source;
     this.isSourceSet = true;
     console.log('Source set:', this.sourceShape);
@@ -378,6 +400,7 @@ export class AppComponent {
     try {
       // Remove the shape from the graph
       shape.remove();
+      this.isDelete = false;
 
       // Remove the corresponding link from the set of existing links
       this.existingLinks.forEach((relationKey) => {
@@ -387,13 +410,8 @@ export class AppComponent {
         }
       });
 
-      // Hide the delete button by removing it from the DOM
-      const deleteButton = document.querySelector(
-        `[data-shape-id="${shape.id.toString()}"]`
-      );
-      if (deleteButton) {
-        deleteButton.remove();
-      }
+      // reset the value of isStartConnection
+      this.isStartConnection = false;
 
       // Notify user
       this.toastr.success('Shape deleted successfully.', 'Success');

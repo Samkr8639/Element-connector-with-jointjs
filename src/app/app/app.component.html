@@ -1,6 +1,8 @@
 <div>
-  <button (click)="addShape()">Add Shape</button>&nbsp;
-  <button (click)="addConnection()">Start Connection</button>&nbsp;
-  <button (click)="deleteShapes()">Delete</button>
+  <div class="mt-2 p-2">
+    <button class="btn btn-secondary" (click)="addShape()">Add Shape</button>&nbsp;
+    <button class="btn {{!isStartConnection?'btn-dark':'btn-success'}}" (click)="addConnection()">Start Connection</button>&nbsp;
+    <button class="btn  {{!isDelete?'btn-light':'btn-danger'}} " (click)="deleteShapes()">Delete</button>
+  </div>
   <div id="paper" class="paper-cont"></div>
 </div>
