@@ -25,7 +25,7 @@ export class AppComponent {
   private isShapeDelete: any;
   public isStartConnection: boolean = false;
   private paperSize = { x: 0, y: 0, width: 500, height: 700 };
-  public isDelete:boolean = false;
+  public isDelete: boolean = false;
 
 
   constructor(private toastr: ToastrService) { }
@@ -62,7 +62,7 @@ export class AppComponent {
     this.circ1 = this.createCircle(20, 25, 150, 150, 'Hello');
     this.rect2 = this.createRectangle(95, 225, 180, 50, 'World!');
 
-    
+
     this.applyDragConstraints(this.circ1, this.paperSize);
     this.applyDragConstraints(this.rect2, this.paperSize);
 
@@ -71,8 +71,8 @@ export class AppComponent {
 
   addConnection() {
     this.isStartConnection = !this.isStartConnection;
-    if(this.isStartConnection){
-      this.toastr.show('Start connection is enable');
+    if (this.isStartConnection) {
+      // this.toastr.show('Start connection is enable');
     }
   }
 
@@ -81,7 +81,7 @@ export class AppComponent {
     // Randomly decide between adding a circle or a rectangle
     const shapeType = Math.random() > 0.5 ? 'circle' : 'rectangle';
     let randomShape: any;
-  
+
     if (shapeType === 'circle') {
       randomShape = this.createCircle(
         Math.random() * 400,
@@ -99,11 +99,11 @@ export class AppComponent {
         'New Rectangle'
       );
     }
-  
+
     // Ensure drag constraints are applied to the created shape
     this.applyDragConstraints(randomShape, this.paperSize);
   }
-  
+
 
   createCircle(
     x: number,
@@ -143,8 +143,8 @@ export class AppComponent {
       this.isShapeDelete = null;
       this.isStartConnection = false;
       this.isDelete = false;
-      if(!this.isStartConnection){
-        this.toastr.show('Start connection is desabled');
+      if (!this.isStartConnection) {
+        // this.toastr.show('Start connection is desabled');
       }
       this.resetPreviousSelection();
     });
@@ -175,9 +175,14 @@ export class AppComponent {
           const relationKey = `${sourceId}-${targetId}`;
           this.existingLinks.delete(relationKey);
           console.log('Link removed:', relationKey);
+
+          // Set source.id and target.id to null
+          cell.set('source', { ...cell.get('source'), id: null });
+          cell.set('target', { ...cell.get('target'), id: null });
         }
       }
     });
+
   }
 
   handleCellClick(clickedCell: dia.Cell) {
@@ -199,7 +204,7 @@ export class AppComponent {
       // Check if the element is a rectangle or ellipse based on its rx property
       const rx = element.attr('body').rx;
       let strokeColor = 'green';
-      if(strokeColor = 'green'){
+      if (strokeColor = 'green') {
         this.isDelete = true;
       }
       const strokeWidth = 3;
