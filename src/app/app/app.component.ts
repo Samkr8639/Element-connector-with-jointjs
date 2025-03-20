@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Renderer2, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
 import { dia, shapes, linkTools } from '@joint/core';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import * as joint from '@joint/core';
+import { HtmlParser } from '@angular/compiler';
 
 @Component({
   selector: 'app-app',
@@ -21,28 +22,62 @@ export class AppComponent {
   sourceShape: dia.Element | null = null;
   targetShape: dia.Element | null = null;
   private existingLinks: Set<string> = new Set();
-  private deleteTimeout: any;
   private isShapeDelete: any;
   public isStartConnection: boolean = false;
-  private paperSize = { x: 0, y: 0, width: 500, height: 700 };
+  private paperSize = { x: 0, y: 0, width: 600, height: 700 };
   public isDelete: boolean = false;
+  public Card: any;
+  @ViewChild('cardTemplate', { static: false }) cardTemplate!: TemplateRef<any>;
+  @ViewChild('container', { read: ViewContainerRef }) container!: ViewContainerRef;
 
+  constructor(private toastr: ToastrService, private cdr: ChangeDetectorRef) { }
 
-  constructor(private toastr: ToastrService) { }
 
   async ngOnInit() {
-    this.circ1 = new dia.Element({
-      position: { x: 100, y: 100 },
-      size: { width: 100, height: 100 },
-      attrs: { body: { fill: 'lightblue' } },
+    this.Card = dia.Element.define('example.ForeignObject', {
+      attrs: {
+        body: {
+          width: 'calc(w)',
+          height: 'calc(h)',
+          fill: {
+            type: 'linearGradient',
+            stops: [
+              { offset: 0, color: '#fff' },
+              { offset: 0.5, color: '#fff' },
+              { offset: 1, color: '#fff'}
+            ]
+          }
+        },
+        foreignObject: {
+          width: 'calc(w-12)',
+          height: 'calc(h-12)',
+          x: 6,
+          y: 6
+        }
+      },
+    }, {
+      markup: [
+        {
+          tagName: 'rect',
+          selector: 'body'
+        },
+        {
+          tagName: 'foreignObject',
+          selector: 'foreignObject',
+          children: [
+            {
+              tagName: 'div',
+              namespaceURI: 'http://www.w3.org/1999/xhtml',
+              selector: 'background',
+              style: {
+                backgroundColor: '#fff',
+                height: '100%'
+              }
+            }
+          ]
+        }
+      ]
     });
-
-    this.rect2 = new dia.Element({
-      position: { x: 300, y: 100 },
-      size: { width: 100, height: 100 },
-      attrs: { body: { fill: 'lightgreen' } },
-    });
-
     await this.initializeGraph();
     await this.setupShapes();
   }
@@ -51,20 +86,59 @@ export class AppComponent {
     this.paper = new dia.Paper({
       el: document.getElementById('paper') as HTMLElement,
       model: this.graph,
-      width: 500,
+      width: 600,
       height: 700,
       background: { color: '#3672e7' },
       cellViewNamespace: this.namespace,
+      preventDefaultViewAction: false
     });
   }
 
   async setupShapes() {
-    this.circ1 = this.createCircle(20, 25, 150, 150, 'Hello');
-    this.rect2 = this.createRectangle(95, 225, 180, 50, 'World!');
+    const card = new this.Card();
+    card.position(10, 10);
+    card.resize(300, 250);
+    card.addTo(this.graph);
+    card.attr('body', { stroke: '#C94A46', rx: 2, ry: 2 });
+  
+    requestAnimationFrame(() => {
+      const view = card.findView(this.paper);
+      
+      // view.model.set('id',65)
+      // debugger;
+      if (!view) return;
+  
+      const foElement = view.el.querySelector('foreignObject');
+      if (foElement && this.cardTemplate) {
+        // Create a container div for rendering the template
+        const container = document.createElement('div');
+        
+        // Step 1: Render the Angular TemplateRef into a container
+        const embeddedView = this.container.createEmbeddedView(this.cardTemplate);
+        
+        // Step 2: Manually detect changes to ensure template renders correctly
+        this.cdr.detectChanges();
+  
+        // Step 3: Append rendered content inside the container
+        embeddedView.rootNodes.forEach(node => container.appendChild(node));
+  
+        // Step 4: Clear existing content inside `foreignObject`
+        foElement.innerHTML = '';
+  
+        // Step 5: Append container inside `foreignObject`
+        foElement.appendChild(container);
+      }
+    });
+  
 
 
+
+    this.circ1 = this.createCircle(50, 300, 150, 150, 'Hello');
+    // this.rect2 = this.createRectangle(200, 225, 180, 50, 'World!');
+
+    this.applyDragConstraints(card, this.paperSize);
     this.applyDragConstraints(this.circ1, this.paperSize);
-    this.applyDragConstraints(this.rect2, this.paperSize);
+    // this.applyDragConstraints(this.rect2, this.paperSize);
 
     this.setupLinkEvents();
   }
@@ -199,6 +273,7 @@ export class AppComponent {
 
     // Change the stroke color to green to indicate selection
     if (clickedCell.isElement()) {
+      debugger;
       const element = clickedCell as joint.dia.Element;
 
       // Check if the element is a rectangle or ellipse based on its rx property

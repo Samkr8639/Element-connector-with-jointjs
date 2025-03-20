@@ -1,8 +1,38 @@
 <div>
   <div class="mt-2 p-2">
     <button class="btn btn-secondary" (click)="addShape()">Add Shape</button>&nbsp;
-    <button class="btn {{!isStartConnection?'btn-dark':'btn-success'}}" (click)="addConnection()">Start Connection</button>&nbsp;
+    <button class="btn {{!isStartConnection?'btn-dark':'btn-success'}}" (click)="addConnection()">Start
+      Connection</button>&nbsp;
     <button class="btn  {{!isDelete?'btn-light':'btn-danger'}} " (click)="deleteShapes()">Delete</button>
   </div>
   <div id="paper" class="paper-cont"></div>
 </div>
+
+<div #container></div>
+
+<ng-template #cardTemplate>
+  <div  cdkdrag="" cdkdragboundary=".automation-right-sec" class="cdk-drag ng-star-inserted"
+    ng-reflect-boundary-element=".automation-right-sec" style="transform: translate3d(0px, 1px, 0px);">
+    <div  class="card bg-light mb-3" style="height: auto; max-width: 18rem;">
+      <div  class="card-header">Trigger 2 </div>
+      <div  class="card-body">
+        <div  class="mt-2 text-left">
+          <h3 >When:</h3>
+          <div  class="d-flex justify-content-between
+           automation-card-pare ng-star-inserted">
+            <p  class="card-text">Cash Buy Before Sell Reserve</p>
+            <p  class="card-text">Cash Buy</p>
+          </div>
+        </div>
+        <div  class="mt-2 text-left">
+          <h3 >Reaches Stage:</h3><span 
+            class="d-flex justify-content-start gap-2"><span 
+              class="automation-card-pare ng-star-inserted">
+              <p  class="card-text">Offer Submitted</p>
+            </span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</ng-template>
